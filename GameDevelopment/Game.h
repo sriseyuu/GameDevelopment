@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <SpriteBatch.h>
+#include <SpriteFont.h>
 #include "StepTimer.h"
 
 
@@ -62,4 +64,15 @@ private:
 
     // Rendering loop timer.
     DX::StepTimer                                   m_timer;
+
+	//スプライトバッチ
+	std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;
+	
+	//スプライトフォント
+	std::unique_ptr<DirectX::SpriteFont> m_spriteFont;
+
+	//カウント
+	int m_count;
+
+	std::wstring m_str;
 };
