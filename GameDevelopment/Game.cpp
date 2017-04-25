@@ -4,7 +4,11 @@
 
 #include "pch.h"
 #include "Game.h"
+
 #include <sstream>
+#include <CommonStates.h>
+#include <WICTextureLoader.h>
+#include <DDSTextureLoader.h>
 
 extern void ExitGame();
 
@@ -44,6 +48,33 @@ void Game::Initialize(HWND window, int width, int height)
 	m_spriteFont = std::make_unique<SpriteFont>(m_d3dDevice.Get(), L"Resources\\myfile.spritefont");
 
 	m_count = 0;
+	//リソース情報をしまう
+	ComPtr<ID3D11Resource> resource;
+
+	DX::ThrowIfFailed(
+		CreateWICTextureFromFile(m_d3dDevice.Get(), L"Resources\\cat.png",
+			resource.GetAddressOf(),
+			m_texture.ReleaseAndGetAddressOf()));
+
+	//DX::ThrowIfFailed(
+	//	CreateDDSTextureFromFile(m_d3dDevice.Get(), L"Resources\\cat.dds", resource.GetAddressOf(),
+	//		m_texture.ReleaseAndGetAddressOf()));
+
+	//猫のテクスチャ
+	ComPtr<ID3D11Texture2D> cat;
+	DX::ThrowIfFailed(resource.As(&cat));
+
+	//テクスチャの情報
+	CD3D11_TEXTURE2D_DESC catDesc;
+	cat->GetDesc(&catDesc);
+
+	//テクスチャの原点を画像の中心に設定
+	m_origin.x = float(catDesc.Width / 2);
+	m_origin.y = float(catDesc.Height / 2);
+
+	//表示座標を画面の真ん中に設定
+	m_screenPos.x = m_outputWidth / 2.f;
+	m_screenPos.y = m_outputHeight / 2.f;
 }
 
 // Executes the basic game loop.
@@ -68,8 +99,9 @@ void Game::Update(DX::StepTimer const& timer)
 	m_count++;
 
 	std::wstringstream ss;
-	ss << L"fack you!" << m_count;
 
+	ss << L"nya~" << m_count << "\n";
+	
 	m_str = ss.str();
 }
 
@@ -85,13 +117,20 @@ void Game::Render()
     Clear();
 
     // TODO: Add your rendering code here.
+	CommonStates m_states(m_d3dDevice.Get());
+	m_spriteBatch->Begin(SpriteSortMode_Deferred, m_states.NonPremultiplied());
 
+	//テクスチャの切り取り矩形
+	RECT rect;
 
-	m_spriteBatch->Begin();
+	rect = { 50,0,100,50 };
+
+	m_spriteBatch->Draw(m_texture.Get(), m_screenPos, nullptr, Colors::White,
+		m_count / 1.0f, m_origin,m_count % 10);
 
 	m_spriteFont->DrawString(m_spriteBatch.get(), L"Hello, world!", XMFLOAT2(100, 100));
 
-	m_spriteFont->DrawString(m_spriteBatch.get(), m_str.c_str(), XMFLOAT2(100, 400));
+	m_spriteFont->DrawString(m_spriteBatch.get(), m_str.c_str(), XMFLOAT2(rand() % 640, rand() % 480));
 
 	m_spriteBatch->End();
     
